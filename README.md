@@ -16,9 +16,10 @@ alongside [GovCon Recompete Radar](https://github.com/CJud25/GovConRadar) and
 2. **Aggregates by design.** Referral sources, sites, and contracts get measured —
    **applicants never do.** No applicant-level rows, identifiers, or statuses
    render anywhere (test-enforced). One documented exception: synthetic
-   partner-organization **business contacts** may appear by name in the outreach
-   workflow (contact log, human-reviewed draft messages) — they are B2B contacts,
-   never applicants, and never scored.
+   partner-organization **business contacts** may appear by name in three synthetic
+   surfaces — the Resource Network contact table, the Outreach contact picker,
+   and human-reviewed draft messages — they are B2B contacts, never applicants,
+   and never scored.
 
 ## What it demonstrates
 
