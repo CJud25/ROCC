@@ -1,0 +1,20 @@
+[project]
+name = "rocc-demo"
+version = "1.0.0"
+description = "ROCC synthetic recruiting intelligence and workforce-readiness demonstration"
+requires-python = ">=3.11"
+dependencies = [
+  "streamlit==1.46.1",
+  "plotly==6.1.2",
+  "pandas==2.3.3",
+  "numpy==2.5.1; python_version >= '3.12'",
+    "numpy==2.4.6; python_version < '3.12'",
+]
+
+[project.optional-dependencies]
+dev = ["pytest==8.4.1"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = "-q"
