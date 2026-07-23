@@ -172,20 +172,26 @@ def render_home(data: DemoData, target: float, scenario: str) -> None:
 
     impact = st.columns(4)
     impact[0].metric(
-        "90-day portfolio planning indicator",
+        "90-day planning indicator",
         f"{summary['projected_ratio']:.1%}",
         delta=f"Target {summary['planning_target']:.1%}",
         help="SYN-FORECAST-1.1: sum of projected QDLH divided by sum of projected total DLH.",
     )
-    gap_direction = "below" if summary["ratio_gap_points"] > 0 else "above"
+    above_target = summary["ratio_gap_points"] < 0  # ratio_gap_points>0 means BELOW target
+    gap_direction = "above" if above_target else "below"
+    surplus_or_shortfall = "surplus" if summary["hours_gap"] < 0 else "shortfall"
     impact[1].metric(
         "Gap to target",
-        f"{abs(summary['ratio_gap_points']):.1f} points {gap_direction}",
-        delta=f"{summary['hours_gap']:+,.0f} hours (+ means shortfall)",
-        delta_color="inverse",
-        help="SYN-FORECAST-1.1: target × summed projected DLH − summed projected QDLH.",
+        f"{abs(summary['ratio_gap_points']):.1f} pts {gap_direction}",
+        delta=f"{abs(summary['hours_gap']):,.0f} hrs {surplus_or_shortfall}",
+        delta_color="off",
+        help="SYN-FORECAST-1.1: target × summed projected DLH − summed projected QDLH. Positive = shortfall (need more qualifying hours); negative = surplus.",
     )
-    impact[2].metric("Ready hires needed", summary["qualified_hires_needed"])
+    impact[2].metric(
+        "Ready hires needed",
+        summary["qualified_hires_needed"],
+        help="Additional fully-qualifying ready hires to reach the planning target across at-risk sites.",
+    )
     impact[3].metric("At Risk / Critical sites", summary["at_risk_sites"])
 
     st.markdown("### Test a leadership commitment")
@@ -281,7 +287,7 @@ def render_home(data: DemoData, target: float, scenario: str) -> None:
             y=target,
             text="Current course does not cross below target through day 180",
             showarrow=False,
-            yshift=16,
+            yshift=28,
         )
     fig.update_layout(title="Portfolio trajectory and live commitment simulation", hovermode="x unified")
     fig.update_xaxes(title="Planning horizon (days)", tickvals=list(FORECAST_HORIZONS))
