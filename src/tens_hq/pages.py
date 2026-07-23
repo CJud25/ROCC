@@ -347,9 +347,17 @@ def render_site_readiness(data: DemoData, target: float, scenario: str) -> None:
     cols[1].metric("90-day", f"{row90['projected_ratio']:.1%}", f"{row90['direction']:+.1%}")
     cols[2].metric("180-day", f"{row180['projected_ratio']:.1%}")
     cols[3].metric("Open roles", int(row90["open_roles_count"]))
-    cols[4].metric("Estimated ready hires needed", int(row90["qualified_hiring_need"] or 0))
-    cols[5].metric("Expected ready hires", f"{row90['expected_ready_hires']:.1f}")
+    cols[4].metric("Ready hires still needed", int(row90["qualified_hiring_need"] or 0))
+    cols[5].metric("Projected pipeline arrivals", f"{row90['expected_ready_hires']:.1f}")
     st.markdown(f'<div class="insight-box">{html.escape(row90["explanation"])}</div>', unsafe_allow_html=True)
+    _cov = row90["pipeline_coverage"]
+    _cov_txt = "n/a" if pd.isna(_cov) else f"{_cov:.2f}x"
+    st.caption(
+        f"Coverage = projected arrivals / ready hires still needed = {_cov_txt}. "
+        "A site can project more arrivals than it still needs and remain At Risk: "
+        "projected arrivals are already inside the projected indicator, while "
+        "'still needed' is the residual gap after them."
+    )
 
     left, right = st.columns([1.35, 1])
     with left:
@@ -774,6 +782,11 @@ def render_ratio_forecast(data: DemoData, target: float, scenario: str) -> None:
     table["expected_ready_hires"] = table["expected_ready_hires"].round(1)
     table["pipeline_coverage"] = table["pipeline_coverage"].map(lambda value: "N/A" if pd.isna(value) else f"{value:.2f}")
     st.dataframe(_label_columns(table), hide_index=True, use_container_width=True)
+    st.caption(
+        "'Projected pipeline arrivals' are already included in the projected indicator; "
+        "'Ready hires still needed' is the residual gap after them, so a site can show "
+        "more arrivals than needed and still be At Risk. Coverage = arrivals / need."
+    )
 
     st.markdown("### Scenario sensitivity")
     scenario_frames = []
