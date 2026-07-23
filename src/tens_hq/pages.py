@@ -12,6 +12,7 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from .constants import (
+    COLUMN_LABELS,
     DATA_AS_OF_DATE,
     DEFAULT_SEED,
     DRAFT_BANNER,
@@ -116,6 +117,11 @@ def _format_percent_frame(frame: pd.DataFrame, columns: list[str]) -> pd.DataFra
     for column in columns:
         result[column] = result[column].map(lambda value: "—" if pd.isna(value) else f"{value:.1%}")
     return result
+
+
+def _label_columns(frame: pd.DataFrame) -> pd.DataFrame:
+    """Rename raw metric-layer columns to friendly headers for display only."""
+    return frame.rename(columns=COLUMN_LABELS)
 
 
 @st.cache_data(show_spinner=False, hash_funcs={DemoData: lambda _: "synthetic-demo-data"})
@@ -396,9 +402,11 @@ def render_site_readiness(data: DemoData, target: float, scenario: str) -> None:
             st.info("No scored source covers this fictional county; validate the resource inventory.")
         else:
             st.dataframe(
-                recommended[
-                    ["organization_name", "relationship_status", "partner_priority_score", "confidence_level"]
-                ].round({"partner_priority_score": 1}),
+                _label_columns(
+                    recommended[
+                        ["organization_name", "relationship_status", "partner_priority_score", "confidence_level"]
+                    ].round({"partner_priority_score": 1})
+                ),
                 hide_index=True,
                 use_container_width=True,
             )
@@ -453,9 +461,11 @@ def render_resource_network(data: DemoData, target: float, scenario: str) -> Non
     with right:
         st.markdown("#### Filtered directory")
         st.dataframe(
-            filtered[
-                ["organization_name", "organization_type", "county_name", "state_code", "relationship_status", "next_follow_up_date"]
-            ],
+            _label_columns(
+                filtered[
+                    ["organization_name", "organization_type", "county_name", "state_code", "relationship_status", "next_follow_up_date"]
+                ]
+            ),
             hide_index=True,
             use_container_width=True,
             height=410,
@@ -477,11 +487,11 @@ def render_resource_network(data: DemoData, target: float, scenario: str) -> Non
         contacts = data.contacts.loc[data.contacts["organization_id"] == org_id]
         tab_names = ["Coverage", "Job families", "Business contacts", "Outreach history"]
         tabs = dict(zip(tab_names, st.tabs(tab_names)))
-        tabs["Coverage"].dataframe(coverage_detail[["county_name", "state_code", "coverage_strength", "verified_status"]], hide_index=True, use_container_width=True)
-        tabs["Job families"].dataframe(capabilities[["job_family", "capability_level", "evidence_source"]], hide_index=True, use_container_width=True)
-        tabs["Business contacts"].dataframe(contacts[["contact_name", "contact_title", "contact_email", "preferred_channel"]], hide_index=True, use_container_width=True)
+        tabs["Coverage"].dataframe(_label_columns(coverage_detail[["county_name", "state_code", "coverage_strength", "verified_status"]]), hide_index=True, use_container_width=True)
+        tabs["Job families"].dataframe(_label_columns(capabilities[["job_family", "capability_level", "evidence_source"]]), hide_index=True, use_container_width=True)
+        tabs["Business contacts"].dataframe(_label_columns(contacts[["contact_name", "contact_title", "contact_email", "preferred_channel"]]), hide_index=True, use_container_width=True)
         activities = data.outreach.loc[data.outreach["organization_id"] == org_id].sort_values("activity_date", ascending=False)
-        tabs["Outreach history"].dataframe(activities[["activity_date", "outreach_type", "outcome_code", "next_follow_up_date"]].head(20), hide_index=True, use_container_width=True)
+        tabs["Outreach history"].dataframe(_label_columns(activities[["activity_date", "outreach_type", "outcome_code", "next_follow_up_date"]].head(20)), hide_index=True, use_container_width=True)
 
 
 def render_outreach(data: DemoData, target: float, scenario: str) -> None:
@@ -667,7 +677,7 @@ def render_source_performance(data: DemoData, target: float, scenario: str) -> N
         ]
     ].copy()
     display = display.round(1)
-    st.dataframe(display, hide_index=True, use_container_width=True, height=350)
+    st.dataframe(_label_columns(display), hide_index=True, use_container_width=True, height=350)
 
     selected = st.selectbox("Open source detail", scores["organization_name"].tolist())
     row = scores.loc[scores["organization_name"] == selected].iloc[0]
@@ -753,7 +763,7 @@ def render_ratio_forecast(data: DemoData, target: float, scenario: str) -> None:
     table = _format_percent_frame(table, ["current_ratio", "projected_ratio", "direction"])
     table["expected_ready_hires"] = table["expected_ready_hires"].round(1)
     table["pipeline_coverage"] = table["pipeline_coverage"].map(lambda value: "N/A" if pd.isna(value) else f"{value:.2f}")
-    st.dataframe(table, hide_index=True, use_container_width=True)
+    st.dataframe(_label_columns(table), hide_index=True, use_container_width=True)
 
     st.markdown("### Scenario sensitivity")
     scenario_frames = []
@@ -865,7 +875,8 @@ def render_governance(data: DemoData, target: float, scenario: str) -> None:
     left, right = st.columns([1, 1.1])
     with left:
         st.markdown("### Data inventory")
-        st.dataframe(counts, hide_index=True, use_container_width=True)
+        st.dataframe(_label_columns(counts), hide_index=True, use_container_width=True)
+        st.caption("The applicants and stage-history rows exist only as in-memory aggregation inputs; they are never rendered, listed, or scored per person (ADR-024).")
         st.markdown("### Non-negotiable commitments")
         st.markdown(
             "- **SYNTHETIC ONLY UNTIL EMPLOYER SPONSORSHIP.** No real-data pathway ships in this demo.\n"
