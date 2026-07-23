@@ -543,7 +543,26 @@ def render_outreach(data: DemoData, target: float, scenario: str) -> None:
         ]
     ].head(100).copy()
     queue_view["partner_priority_score"] = queue_view["partner_priority_score"].round(1)
-    st.dataframe(queue_view, hide_index=True, use_container_width=True, height=360)
+    queue_view = _label_columns(queue_view)
+
+    def _overdue_css(column: pd.Series) -> list[str]:
+        out = []
+        for value in column:
+            if value >= 120:
+                out.append("background-color: #F9DEDC; color: #7A271A; font-weight: 700")
+            elif value >= 60:
+                out.append("background-color: #FDECC8; color: #7A4D00")
+            else:
+                out.append("")
+        return out
+
+    styled_queue = (
+        queue_view.style
+        .apply(_overdue_css, subset=["Days overdue"])
+        .format({"Partner priority": "{:.1f}", "Days overdue": "{:.0f}"})
+    )
+    st.dataframe(styled_queue, hide_index=True, use_container_width=True, height=360)
+    st.caption("Rows shaded by how overdue they are: red >= 120 days, amber >= 60 days. The queue is sorted by priority underneath.")
 
     st.markdown("### Draft generator")
     draft_cols = st.columns(2)
@@ -626,6 +645,15 @@ def render_applicant_pipeline(data: DemoData, target: float, scenario: str) -> N
         "Conversion from prior stage"
     ].map(lambda value: "Entry" if pd.isna(value) else f"{value:.1%}")
     st.dataframe(funnel_display, hide_index=True, use_container_width=True)
+    _conv = funnel[["Stage", "Conversion from prior stage"]].dropna(
+        subset=["Conversion from prior stage"]
+    )
+    if not _conv.empty:
+        _weak = _conv.loc[_conv["Conversion from prior stage"].idxmin()]
+        st.warning(
+            f"Weakest conversion: **{_weak['Stage']}** at "
+            f"{_weak['Conversion from prior stage']:.1%} from the prior stage - the primary funnel bottleneck."
+        )
 
     stage_col, source_col = st.columns(2)
     with stage_col:

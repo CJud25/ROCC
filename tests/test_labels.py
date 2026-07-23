@@ -35,6 +35,7 @@ def test_leadership_tables_have_no_snake_case_headers():
         "Source Performance",
         "Ratio Forecast",
         "Privacy & Governance",
-    ]:  # Outreach Command Center is added in S8 (after its queue is renamed)
+        "Outreach Command Center",
+    ]:
         offenders = {c for c in _columns_on_page(page) if SNAKE.match(c)}
         assert not offenders, f"{page} still shows raw headers: {sorted(offenders)}"
