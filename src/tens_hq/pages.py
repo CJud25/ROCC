@@ -519,6 +519,10 @@ def render_outreach(data: DemoData, target: float, scenario: str) -> None:
         "Recruiting / Action Queue",
     )
     st.markdown(f'<div class="draft-banner">{DRAFT_BANNER} · ROCC has no email sending capability.</div>', unsafe_allow_html=True)
+    st.caption(
+        "This queue is a read-only planning view, recomputed from synthetic aggregates on each load. "
+        "Assigning, completing, or deferring actions is a proposed next slice (ADR-009), not yet built."
+    )
     forecasts = _cached_forecast_sites(data, DEFAULT_SEED, target, scenario, 90)
     scores = _cached_source_performance(data, DEFAULT_SEED)
     queue = build_outreach_queue(data, scores, forecasts)
