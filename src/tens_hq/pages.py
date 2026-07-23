@@ -460,6 +460,10 @@ def render_resource_network(data: DemoData, target: float, scenario: str) -> Non
     due = int((pd.to_datetime(filtered["next_follow_up_date"]) <= pd.Timestamp(DATA_AS_OF_DATE)).sum())
     cols[3].metric("Follow-ups due", due)
 
+    if filtered.empty:
+        st.info("No organizations match these filters. Adjust the State, Organization type, or Relationship filter to see the network.")
+        return
+
     left, right = st.columns([1.25, 1])
     with left:
         counts = filtered.groupby(["organization_type", "relationship_status"], as_index=False).size()
