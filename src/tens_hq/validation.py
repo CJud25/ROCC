@@ -4,8 +4,24 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .constants import PROHIBITED_COLUMN_TOKENS
+from .constants import COUNTY_NAMES, PROHIBITED_COLUMN_TOKENS, SITE_PROFILES
 from .synthetic import DemoData
+
+_SYNTHETIC_HISTORY_MONTHS = 24  # months of labor history per site (see synthetic.py labor loop, range(24))
+
+
+def expected_row_counts() -> dict[str, int]:
+    """Expected row counts. Derivable counts track the generator constants."""
+    return {
+        "counties": sum(len(names) for names in COUNTY_NAMES.values()),
+        "sites": len(SITE_PROFILES),
+        "organizations": 320,
+        "contacts": 540,
+        "outreach": 1800,
+        "applicants": 1500,
+        "labor_hours": len(SITE_PROFILES) * _SYNTHETIC_HISTORY_MONTHS,
+        "opportunities": 60,
+    }
 
 
 @dataclass(frozen=True)
@@ -21,16 +37,7 @@ class ValidationResult:
 def validate_demo_data(data: DemoData) -> ValidationResult:
     errors: list[str] = []
     warnings: list[str] = []
-    expected_counts = {
-        "counties": 48,
-        "sites": 12,
-        "organizations": 320,
-        "contacts": 540,
-        "outreach": 1800,
-        "applicants": 1500,
-        "labor_hours": 288,
-        "opportunities": 60,
-    }
+    expected_counts = expected_row_counts()
     for name, expected in expected_counts.items():
         actual = len(getattr(data, name))
         if actual != expected:
