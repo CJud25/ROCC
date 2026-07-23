@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-from datetime import date, timedelta
 import html
 
-import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -20,7 +18,6 @@ from .constants import (
     PLANNING_BANNER,
     POLICY_FLOOR,
     RISK_COLORS,
-    RISK_ORDER,
     SYNTHETIC_BANNER,
 )
 from .metrics import (
