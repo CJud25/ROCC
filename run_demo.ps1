@@ -20,7 +20,7 @@ if (-not (Test-Path -LiteralPath $VenvPython)) {
         $BasePython = $PythonCommand.Source
     }
     & $BasePython -m venv $VenvRoot
-    & $VenvPython -m pip install --disable-pip-version-check -r (Join-Path $ProjectRoot 'requirements-dev.txt')
+    & $VenvPython -m pip install --disable-pip-version-check -r (Join-Path $ProjectRoot 'requirements.txt')
 }
 
 & $VenvPython -m streamlit run (Join-Path $ProjectRoot 'app.py')
