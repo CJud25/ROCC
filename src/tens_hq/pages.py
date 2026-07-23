@@ -725,12 +725,16 @@ def render_ratio_forecast(data: DemoData, target: float, scenario: str) -> None:
 
     forecasts = _cached_forecast_sites(data, DEFAULT_SEED, target, scenario, horizon)
     summary = portfolio_summary(forecasts)
-    cols = st.columns(5)
+    cols = st.columns(4)
     cols[0].metric("Portfolio scenario", f"{summary['projected_ratio']:.1%}")
-    cols[1].metric("Current policy floor reference", f"{POLICY_FLOOR:.1%}")
+    cols[1].metric(
+        "Planning floor (internal)",
+        f"{POLICY_FLOOR:.1%}",
+        help="Synthetic internal early-warning floor for this demo - NOT a statutory figure. The AbilityOne requirement is the 75% direct-labor-hours ratio.",
+    )
     cols[2].metric("At Risk / Critical", summary["at_risk_sites"])
-    cols[3].metric("Additional ready hires", summary["qualified_hires_needed"])
-    cols[4].metric("Formula version", forecasts["formula_version"].iloc[0])
+    cols[3].metric("Ready hires still needed", summary["qualified_hires_needed"])
+    st.caption(f"Formula version: {forecasts['formula_version'].iloc[0]} - synthetic planning model")
 
     comparison = forecasts[["site_name", "current_ratio", "projected_ratio", "risk_status"]].melt(
         id_vars=["site_name", "risk_status"],
