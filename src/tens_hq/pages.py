@@ -567,8 +567,8 @@ def render_outreach(data: DemoData, target: float, scenario: str) -> None:
         job_family_name,
         selected_queue["relationship_status"],
     )
-    st.text_input("Draft subject", value=subject)
-    st.text_area("Draft message", value=body, height=300)
+    st.text_input("Draft subject", value=subject, disabled=True)
+    st.text_area("Draft message", value=body, height=300, disabled=True)
     st.caption("Review through approved organizational channels. The demo intentionally provides no Send button and stores no real contact data.")
 
     with st.expander("Call and voicemail scripts"):
