@@ -214,3 +214,56 @@ PROHIBITED_COLUMN_TOKENS = {
     "psychological_evaluation",
     "disability_narrative",
 }
+
+COLUMN_LABELS = {
+    # identity / org
+    "organization_name": "Organization",
+    "organization_type": "Type",
+    "relationship_status": "Relationship",
+    "confidence_level": "Confidence",
+    # geography
+    "county_name": "County",
+    "state_code": "State",
+    "site_name": "Site",
+    # dates / contacts
+    "next_follow_up_date": "Next follow-up",
+    "activity_date": "Activity date",
+    "outreach_type": "Outreach type",
+    "outcome_code": "Outcome",
+    "contact_name": "Contact",
+    "contact_title": "Title",
+    "contact_email": "Email",
+    "preferred_channel": "Preferred channel",
+    # coverage / capability
+    "coverage_strength": "Coverage strength",
+    "verified_status": "Verified",
+    "job_family": "Job family",
+    "capability_level": "Capability level",
+    "evidence_source": "Evidence source",
+    # scores / risk
+    "partner_priority_score": "Partner priority",
+    "reliability_score": "Reliability",
+    "risk_status": "Risk",
+    "days_overdue": "Days overdue",
+    "suggested_next_action": "Suggested next action",
+    # source-performance rates
+    "referral_volume": "Referrals",
+    "hire_yield": "Hire yield %",
+    "eligibility_clearance_yield": "Clearance yield %",
+    "documentation_completion": "Docs complete %",
+    "retention_90": "90-day retention %",
+    # forecast columns
+    "current_ratio": "Current indicator",
+    "projected_ratio": "Projected indicator",
+    "direction": "Change",
+    "expected_attrition_fte": "Expected attrition (FTE)",
+    "pipeline_candidates": "Pipeline candidates",
+    "expected_ready_hires": "Projected pipeline arrivals",   # S4 reconciliation
+    "qualified_hiring_need": "Ready hires still needed",      # S4 reconciliation
+    "pipeline_coverage": "Coverage (arrivals / need)",        # S4 reconciliation
+    "open_roles_count": "Open roles",
+    # privacy inventory
+    "dataset": "Dataset",
+    "rows": "Rows",
+    "synthetic_flag_complete": "All rows synthetic",
+}

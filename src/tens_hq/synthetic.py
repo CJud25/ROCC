@@ -290,9 +290,6 @@ def generate_demo_data(seed: int = DEFAULT_SEED) -> DemoData:
     outreach = pd.DataFrame(outreach_rows)
 
     sites_by_county = sites.groupby("county_id")["site_id"].apply(list).to_dict()
-    organization_position_by_id = {
-        org_id: position for position, org_id in enumerate(organizations["organization_id"].tolist())
-    }
     organization_records = organizations.to_dict("records")
     site_record_by_id = {record["site_id"]: record for record in sites.to_dict("records")}
     applicant_rows: list[dict] = []

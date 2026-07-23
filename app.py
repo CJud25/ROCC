@@ -61,6 +61,11 @@ def main() -> None:
     with st.sidebar:
         st.markdown("# ROCC — Recruiting & Outreach Control Center")
         st.caption("part of TENS HQ")
+        st.markdown("**Planning controls**")
+        scenario = st.selectbox("Scenario", ["Base", "Conservative", "Optimistic"])
+        target_pct = st.slider("Planning target", 70.0, 82.0, DEFAULT_TARGET * 100.0, 0.5)
+        st.caption("Site indicators are planning proxies. They are not official ODLH determinations.")
+        st.markdown("---")
         visible_pages = [page for page in PAGE_RENDERERS if page in allowed_pages()]
         _restore_and_clamp_navigation(visible_pages)
         page = st.radio(
@@ -73,11 +78,6 @@ def main() -> None:
             f'<div class="sidebar-banner">{SYNTHETIC_BANNER}</div>',
             unsafe_allow_html=True,
         )
-        st.markdown("---")
-        st.markdown("**Planning controls**")
-        scenario = st.selectbox("Scenario", ["Base", "Conservative", "Optimistic"])
-        target_pct = st.slider("Planning target", 70.0, 82.0, DEFAULT_TARGET * 100.0, 0.5)
-        st.caption("Site indicators are planning proxies. They are not official ODLH determinations.")
         st.markdown("---")
         st.caption(f"Demo v{APP_VERSION} · Seed {DEFAULT_SEED}")
 

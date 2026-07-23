@@ -27,11 +27,37 @@ jobs:
       - name: Install development dependencies
         run: python -m pip install --disable-pip-version-check -r requirements-dev.txt
 
+      - name: Lint (ruff)
+        run: python -m ruff check .
+
       - name: Run tests
         run: python -m pytest -q
 
       - name: Validate deterministic synthetic data
         run: python scripts/validate_demo_data.py
 
+      - name: Dependency vulnerability scan (advisory)
+        continue-on-error: true
+        run: |
+          python -m pip install pip-audit==2.10.1
+          python -m pip_audit --strict --requirement requirements.txt
+
       - name: Build demo container
         run: docker build --tag rocc-demo:ci .
+
+      - name: Boot demo container and probe health
+        run: |
+          docker run -d --name rocc-ci -p 8501:8501 rocc-demo:ci
+          ok=0
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:8501/_stcore/health >/dev/null 2>&1; then
+              ok=1; break
+            fi
+            sleep 2
+          done
+          docker logs rocc-ci || true
+          docker rm -f rocc-ci || true
+          if [ "$ok" -ne 1 ]; then
+            echo "container did not become healthy within 60s"; exit 1
+          fi
+          echo "container healthy"

@@ -174,7 +174,6 @@ def forecast_sites(
     if scenario not in _SCENARIO_SETTINGS:
         raise ValueError(f"Unknown scenario: {scenario}")
     settings = _SCENARIO_SETTINGS[scenario]
-    as_of = pd.Timestamp(DATA_AS_OF_DATE)
     weeks = horizon_days / 7.0
     months = horizon_days / 30.4375
 

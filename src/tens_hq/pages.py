@@ -2,16 +2,15 @@
 
 from __future__ import annotations
 
-from datetime import date, timedelta
 import html
 
-import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
 from .constants import (
+    COLUMN_LABELS,
     DATA_AS_OF_DATE,
     DEFAULT_SEED,
     DRAFT_BANNER,
@@ -19,7 +18,6 @@ from .constants import (
     PLANNING_BANNER,
     POLICY_FLOOR,
     RISK_COLORS,
-    RISK_ORDER,
     SYNTHETIC_BANNER,
 )
 from .metrics import (
@@ -118,6 +116,11 @@ def _format_percent_frame(frame: pd.DataFrame, columns: list[str]) -> pd.DataFra
     return result
 
 
+def _label_columns(frame: pd.DataFrame) -> pd.DataFrame:
+    """Rename raw metric-layer columns to friendly headers for display only."""
+    return frame.rename(columns=COLUMN_LABELS)
+
+
 @st.cache_data(show_spinner=False, hash_funcs={DemoData: lambda _: "synthetic-demo-data"})
 def _cached_forecast_sites(
     data: DemoData,
@@ -166,20 +169,26 @@ def render_home(data: DemoData, target: float, scenario: str) -> None:
 
     impact = st.columns(4)
     impact[0].metric(
-        "90-day portfolio planning indicator",
+        "90-day planning indicator",
         f"{summary['projected_ratio']:.1%}",
         delta=f"Target {summary['planning_target']:.1%}",
         help="SYN-FORECAST-1.1: sum of projected QDLH divided by sum of projected total DLH.",
     )
-    gap_direction = "below" if summary["ratio_gap_points"] > 0 else "above"
+    above_target = summary["ratio_gap_points"] < 0  # ratio_gap_points>0 means BELOW target
+    gap_direction = "above" if above_target else "below"
+    surplus_or_shortfall = "surplus" if summary["hours_gap"] < 0 else "shortfall"
     impact[1].metric(
         "Gap to target",
-        f"{abs(summary['ratio_gap_points']):.1f} points {gap_direction}",
-        delta=f"{summary['hours_gap']:+,.0f} hours (+ means shortfall)",
-        delta_color="inverse",
-        help="SYN-FORECAST-1.1: target × summed projected DLH − summed projected QDLH.",
+        f"{abs(summary['ratio_gap_points']):.1f} pts {gap_direction}",
+        delta=f"{abs(summary['hours_gap']):,.0f} hrs {surplus_or_shortfall}",
+        delta_color="off",
+        help="SYN-FORECAST-1.1: target × summed projected DLH − summed projected QDLH. Positive = shortfall (need more qualifying hours); negative = surplus.",
     )
-    impact[2].metric("Ready hires needed", summary["qualified_hires_needed"])
+    impact[2].metric(
+        "Ready hires needed",
+        summary["qualified_hires_needed"],
+        help="Additional fully-qualifying ready hires to reach the planning target across at-risk sites.",
+    )
     impact[3].metric("At Risk / Critical sites", summary["at_risk_sites"])
 
     st.markdown("### Test a leadership commitment")
@@ -275,7 +284,7 @@ def render_home(data: DemoData, target: float, scenario: str) -> None:
             y=target,
             text="Current course does not cross below target through day 180",
             showarrow=False,
-            yshift=16,
+            yshift=28,
         )
     fig.update_layout(title="Portfolio trajectory and live commitment simulation", hovermode="x unified")
     fig.update_xaxes(title="Planning horizon (days)", tickvals=list(FORECAST_HORIZONS))
@@ -329,15 +338,23 @@ def render_site_readiness(data: DemoData, target: float, scenario: str) -> None:
     row180 = forecasts180.loc[forecasts180["site_name"] == selected_name].iloc[0]
     site_id = row90["site_id"]
 
-    st.markdown(f"### {selected_name} &nbsp; {_risk_badge(row90['risk_status'])}", unsafe_allow_html=True)
+    st.markdown(f"### {html.escape(selected_name)} &nbsp; {_risk_badge(row90['risk_status'])}", unsafe_allow_html=True)
     cols = st.columns(6)
     cols[0].metric("Current indicator", f"{row90['current_ratio']:.1%}")
     cols[1].metric("90-day", f"{row90['projected_ratio']:.1%}", f"{row90['direction']:+.1%}")
     cols[2].metric("180-day", f"{row180['projected_ratio']:.1%}")
     cols[3].metric("Open roles", int(row90["open_roles_count"]))
-    cols[4].metric("Estimated ready hires needed", int(row90["qualified_hiring_need"] or 0))
-    cols[5].metric("Expected ready hires", f"{row90['expected_ready_hires']:.1f}")
+    cols[4].metric("Ready hires still needed", int(row90["qualified_hiring_need"] or 0))
+    cols[5].metric("Projected pipeline arrivals", f"{row90['expected_ready_hires']:.1f}")
     st.markdown(f'<div class="insight-box">{html.escape(row90["explanation"])}</div>', unsafe_allow_html=True)
+    _cov = row90["pipeline_coverage"]
+    _cov_txt = "n/a" if pd.isna(_cov) else f"{_cov:.2f}x"
+    st.caption(
+        f"Coverage = projected arrivals / ready hires still needed = {_cov_txt}. "
+        "A site can project more arrivals than it still needs and remain At Risk: "
+        "projected arrivals are already inside the projected indicator, while "
+        "'still needed' is the residual gap after them."
+    )
 
     left, right = st.columns([1.35, 1])
     with left:
@@ -396,19 +413,30 @@ def render_site_readiness(data: DemoData, target: float, scenario: str) -> None:
             st.info("No scored source covers this fictional county; validate the resource inventory.")
         else:
             st.dataframe(
-                recommended[
-                    ["organization_name", "relationship_status", "partner_priority_score", "confidence_level"]
-                ].round({"partner_priority_score": 1}),
+                _label_columns(
+                    recommended[
+                        ["organization_name", "relationship_status", "partner_priority_score", "confidence_level"]
+                    ].round({"partner_priority_score": 1})
+                ),
                 hide_index=True,
                 use_container_width=True,
             )
         st.markdown("#### Manager action plan")
-        st.markdown(
-            "1. Confirm the assumption set and latest labor close.\n"
-            "2. Assign the top three partner contacts to an owner.\n"
-            "3. Complete a 14-day outreach sprint for At Risk/Critical sites.\n"
-            "4. Re-run the forecast after the next pipeline review."
+        top_partners = (
+            recommended["organization_name"].head(3).tolist() if not recommended.empty else []
         )
+        partners_txt = ", ".join(top_partners) if top_partners else "the highest-priority covered partners"
+        steps = [
+            f"1. Confirm **{selected_name}**'s latest labor close and the {row90['risk_status']} assumption set.",
+            f"2. Assign an owner to contact {partners_txt}.",
+        ]
+        if row90["risk_status"] in {"At Risk", "Critical"}:
+            steps.append("3. Run a 14-day outreach sprint (this site is At Risk/Critical).")
+            steps.append("4. Re-run the forecast after the next pipeline review.")
+        else:
+            steps.append("3. Maintain the standard partner cadence; no sprint required at current risk.")
+            steps.append("4. Re-run the forecast after the next pipeline review.")
+        st.markdown("\n".join(steps))
 
 
 def render_resource_network(data: DemoData, target: float, scenario: str) -> None:
@@ -438,6 +466,10 @@ def render_resource_network(data: DemoData, target: float, scenario: str) -> Non
     due = int((pd.to_datetime(filtered["next_follow_up_date"]) <= pd.Timestamp(DATA_AS_OF_DATE)).sum())
     cols[3].metric("Follow-ups due", due)
 
+    if filtered.empty:
+        st.info("No organizations match these filters. Adjust the State, Organization type, or Relationship filter to see the network.")
+        return
+
     left, right = st.columns([1.25, 1])
     with left:
         counts = filtered.groupby(["organization_type", "relationship_status"], as_index=False).size()
@@ -453,9 +485,11 @@ def render_resource_network(data: DemoData, target: float, scenario: str) -> Non
     with right:
         st.markdown("#### Filtered directory")
         st.dataframe(
-            filtered[
-                ["organization_name", "organization_type", "county_name", "state_code", "relationship_status", "next_follow_up_date"]
-            ],
+            _label_columns(
+                filtered[
+                    ["organization_name", "organization_type", "county_name", "state_code", "relationship_status", "next_follow_up_date"]
+                ]
+            ),
             hide_index=True,
             use_container_width=True,
             height=410,
@@ -477,11 +511,11 @@ def render_resource_network(data: DemoData, target: float, scenario: str) -> Non
         contacts = data.contacts.loc[data.contacts["organization_id"] == org_id]
         tab_names = ["Coverage", "Job families", "Business contacts", "Outreach history"]
         tabs = dict(zip(tab_names, st.tabs(tab_names)))
-        tabs["Coverage"].dataframe(coverage_detail[["county_name", "state_code", "coverage_strength", "verified_status"]], hide_index=True, use_container_width=True)
-        tabs["Job families"].dataframe(capabilities[["job_family", "capability_level", "evidence_source"]], hide_index=True, use_container_width=True)
-        tabs["Business contacts"].dataframe(contacts[["contact_name", "contact_title", "contact_email", "preferred_channel"]], hide_index=True, use_container_width=True)
+        tabs["Coverage"].dataframe(_label_columns(coverage_detail[["county_name", "state_code", "coverage_strength", "verified_status"]]), hide_index=True, use_container_width=True)
+        tabs["Job families"].dataframe(_label_columns(capabilities[["job_family", "capability_level", "evidence_source"]]), hide_index=True, use_container_width=True)
+        tabs["Business contacts"].dataframe(_label_columns(contacts[["contact_name", "contact_title", "contact_email", "preferred_channel"]]), hide_index=True, use_container_width=True)
         activities = data.outreach.loc[data.outreach["organization_id"] == org_id].sort_values("activity_date", ascending=False)
-        tabs["Outreach history"].dataframe(activities[["activity_date", "outreach_type", "outcome_code", "next_follow_up_date"]].head(20), hide_index=True, use_container_width=True)
+        tabs["Outreach history"].dataframe(_label_columns(activities[["activity_date", "outreach_type", "outcome_code", "next_follow_up_date"]].head(20)), hide_index=True, use_container_width=True)
 
 
 def render_outreach(data: DemoData, target: float, scenario: str) -> None:
@@ -491,6 +525,10 @@ def render_outreach(data: DemoData, target: float, scenario: str) -> None:
         "Recruiting / Action Queue",
     )
     st.markdown(f'<div class="draft-banner">{DRAFT_BANNER} · ROCC has no email sending capability.</div>', unsafe_allow_html=True)
+    st.caption(
+        "This queue is a read-only planning view, recomputed from synthetic aggregates on each load. "
+        "Assigning, completing, or deferring actions is a proposed next slice (ADR-009), not yet built."
+    )
     forecasts = _cached_forecast_sites(data, DEFAULT_SEED, target, scenario, 90)
     scores = _cached_source_performance(data, DEFAULT_SEED)
     queue = build_outreach_queue(data, scores, forecasts)
@@ -515,7 +553,26 @@ def render_outreach(data: DemoData, target: float, scenario: str) -> None:
         ]
     ].head(100).copy()
     queue_view["partner_priority_score"] = queue_view["partner_priority_score"].round(1)
-    st.dataframe(queue_view, hide_index=True, use_container_width=True, height=360)
+    queue_view = _label_columns(queue_view)
+
+    def _overdue_css(column: pd.Series) -> list[str]:
+        out = []
+        for value in column:
+            if value >= 120:
+                out.append("background-color: #F9DEDC; color: #7A271A; font-weight: 700")
+            elif value >= 60:
+                out.append("background-color: #FDECC8; color: #7A4D00")
+            else:
+                out.append("")
+        return out
+
+    styled_queue = (
+        queue_view.style
+        .apply(_overdue_css, subset=["Days overdue"])
+        .format({"Partner priority": "{:.1f}", "Days overdue": "{:.0f}"})
+    )
+    st.dataframe(styled_queue, hide_index=True, use_container_width=True, height=360)
+    st.caption("Rows shaded by how overdue they are: red >= 120 days, amber >= 60 days. The queue is sorted by priority underneath.")
 
     st.markdown("### Draft generator")
     draft_cols = st.columns(2)
@@ -539,8 +596,8 @@ def render_outreach(data: DemoData, target: float, scenario: str) -> None:
         job_family_name,
         selected_queue["relationship_status"],
     )
-    st.text_input("Draft subject", value=subject)
-    st.text_area("Draft message", value=body, height=300)
+    st.text_input("Draft subject", value=subject, disabled=True)
+    st.text_area("Draft message", value=body, height=300, disabled=True)
     st.caption("Review through approved organizational channels. The demo intentionally provides no Send button and stores no real contact data.")
 
     with st.expander("Call and voicemail scripts"):
@@ -598,6 +655,15 @@ def render_applicant_pipeline(data: DemoData, target: float, scenario: str) -> N
         "Conversion from prior stage"
     ].map(lambda value: "Entry" if pd.isna(value) else f"{value:.1%}")
     st.dataframe(funnel_display, hide_index=True, use_container_width=True)
+    _conv = funnel[["Stage", "Conversion from prior stage"]].dropna(
+        subset=["Conversion from prior stage"]
+    )
+    if not _conv.empty:
+        _weak = _conv.loc[_conv["Conversion from prior stage"].idxmin()]
+        st.warning(
+            f"Weakest conversion: **{_weak['Stage']}** at "
+            f"{_weak['Conversion from prior stage']:.1%} from the prior stage - the primary funnel bottleneck."
+        )
 
     stage_col, source_col = st.columns(2)
     with stage_col:
@@ -649,6 +715,7 @@ def render_source_performance(data: DemoData, target: float, scenario: str) -> N
         log_x=True,
     )
     fig.update_yaxes(range=[0, 100])
+    fig.update_xaxes(title="Referral volume (log scale)")
     st.plotly_chart(_plot_layout(fig, 500), use_container_width=True)
 
     display = scores[
@@ -667,7 +734,7 @@ def render_source_performance(data: DemoData, target: float, scenario: str) -> N
         ]
     ].copy()
     display = display.round(1)
-    st.dataframe(display, hide_index=True, use_container_width=True, height=350)
+    st.dataframe(_label_columns(display), hide_index=True, use_container_width=True, height=350)
 
     selected = st.selectbox("Open source detail", scores["organization_name"].tolist())
     row = scores.loc[scores["organization_name"] == selected].iloc[0]
@@ -709,12 +776,16 @@ def render_ratio_forecast(data: DemoData, target: float, scenario: str) -> None:
 
     forecasts = _cached_forecast_sites(data, DEFAULT_SEED, target, scenario, horizon)
     summary = portfolio_summary(forecasts)
-    cols = st.columns(5)
+    cols = st.columns(4)
     cols[0].metric("Portfolio scenario", f"{summary['projected_ratio']:.1%}")
-    cols[1].metric("Current policy floor reference", f"{POLICY_FLOOR:.1%}")
+    cols[1].metric(
+        "Planning floor (internal)",
+        f"{POLICY_FLOOR:.1%}",
+        help="Synthetic internal early-warning floor for this demo - NOT a statutory figure. The AbilityOne requirement is the 75% direct-labor-hours ratio.",
+    )
     cols[2].metric("At Risk / Critical", summary["at_risk_sites"])
-    cols[3].metric("Additional ready hires", summary["qualified_hires_needed"])
-    cols[4].metric("Formula version", forecasts["formula_version"].iloc[0])
+    cols[3].metric("Ready hires still needed", summary["qualified_hires_needed"])
+    st.caption(f"Formula version: {forecasts['formula_version'].iloc[0]} - synthetic planning model")
 
     comparison = forecasts[["site_name", "current_ratio", "projected_ratio", "risk_status"]].melt(
         id_vars=["site_name", "risk_status"],
@@ -753,7 +824,12 @@ def render_ratio_forecast(data: DemoData, target: float, scenario: str) -> None:
     table = _format_percent_frame(table, ["current_ratio", "projected_ratio", "direction"])
     table["expected_ready_hires"] = table["expected_ready_hires"].round(1)
     table["pipeline_coverage"] = table["pipeline_coverage"].map(lambda value: "N/A" if pd.isna(value) else f"{value:.2f}")
-    st.dataframe(table, hide_index=True, use_container_width=True)
+    st.dataframe(_label_columns(table), hide_index=True, use_container_width=True)
+    st.caption(
+        "'Projected pipeline arrivals' are already included in the projected indicator; "
+        "'Ready hires still needed' is the residual gap after them, so a site can show "
+        "more arrivals than needed and still be At Risk. Coverage = arrivals / need."
+    )
 
     st.markdown("### Scenario sensitivity")
     scenario_frames = []
@@ -794,7 +870,11 @@ def render_ratio_forecast(data: DemoData, target: float, scenario: str) -> None:
             "- Started people are excluded from expected pipeline hours to prevent actual/expected double counting.\n"
             "- Site percentages are never averaged; the portfolio rolls up summed numerator and denominator.\n"
             "- A zero denominator displays Not Applicable.\n"
-            "- If a hire assumption cannot mathematically reach the target, the app returns an assumption error instead of a number."
+            "- Each additional ready hire is assumed to contribute fully-qualifying hours (Hq = Hd) at this planning stage, "
+            "so 'ready hires still needed' is the residual hours gap / per-hire qualifying hours.\n"
+            "- If a per-hire qualifying assumption could not mathematically reach the target, the need is reported as "
+            "not-reachable rather than a number (a guard retained for a future partial-QDL yield factor; it does not "
+            "trigger under the current full-QDL assumption)."
         )
 
 
@@ -865,7 +945,8 @@ def render_governance(data: DemoData, target: float, scenario: str) -> None:
     left, right = st.columns([1, 1.1])
     with left:
         st.markdown("### Data inventory")
-        st.dataframe(counts, hide_index=True, use_container_width=True)
+        st.dataframe(_label_columns(counts), hide_index=True, use_container_width=True)
+        st.caption("The applicants and stage-history rows exist only as in-memory aggregation inputs; they are never rendered, listed, or scored per person (ADR-024).")
         st.markdown("### Non-negotiable commitments")
         st.markdown(
             "- **SYNTHETIC ONLY UNTIL EMPLOYER SPONSORSHIP.** No real-data pathway ships in this demo.\n"
@@ -900,6 +981,16 @@ def render_governance(data: DemoData, target: float, scenario: str) -> None:
         '<div class="insight-box">ROCC connects aggregate recruiting activity to operational readiness. It helps a manager see which sites may need attention, why a forecast changed, which partner organizations are relevant, and who owns the next outreach step. It does not replace HR, compliance, timekeeping, or management judgment.</div>',
         unsafe_allow_html=True,
     )
+
+    with st.expander("Glossary - synthetic planning terms"):
+        st.markdown(
+            "- **DLH** - Direct Labor Hours: hours worked on the contract's direct labor.\n"
+            "- **QDLH** - Qualifying Direct Labor Hours: the subset of DLH performed by qualifying employees.\n"
+            "- **QDL** - Qualifying Direct Labor (the qualifying-employee labor category).\n"
+            "- **Ratio / planning indicator** - QDLH / DLH, rolled up org-wide by summing hours (never by averaging site percentages). The AbilityOne requirement is 75%.\n"
+            "- **FTE** - Full-Time Equivalent, used here only for synthetic attrition assumptions.\n"
+            "- **ODLH / DLR** - internal shorthand in this demo for the AbilityOne direct-labor-hours ratio (the 75% requirement). These are not standard statutory acronyms; the standard phrasing is 'direct labor hours ratio.'"
+        )
 
     with st.expander("Current primary-source framing used by this concept"):
         st.markdown(
