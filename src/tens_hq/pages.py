@@ -718,6 +718,7 @@ def render_source_performance(data: DemoData, target: float, scenario: str) -> N
         log_x=True,
     )
     fig.update_yaxes(range=[0, 100])
+    fig.update_xaxes(title="Referral volume (log scale)")
     st.plotly_chart(_plot_layout(fig, 500), use_container_width=True)
 
     display = scores[
