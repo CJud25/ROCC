@@ -859,7 +859,11 @@ def render_ratio_forecast(data: DemoData, target: float, scenario: str) -> None:
             "- Started people are excluded from expected pipeline hours to prevent actual/expected double counting.\n"
             "- Site percentages are never averaged; the portfolio rolls up summed numerator and denominator.\n"
             "- A zero denominator displays Not Applicable.\n"
-            "- If a hire assumption cannot mathematically reach the target, the app returns an assumption error instead of a number."
+            "- Each additional ready hire is assumed to contribute fully-qualifying hours (Hq = Hd) at this planning stage, "
+            "so 'ready hires still needed' is the residual hours gap / per-hire qualifying hours.\n"
+            "- If a per-hire qualifying assumption could not mathematically reach the target, the need is reported as "
+            "not-reachable rather than a number (a guard retained for a future partial-QDL yield factor; it does not "
+            "trigger under the current full-QDL assumption)."
         )
 
 
