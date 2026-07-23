@@ -971,6 +971,16 @@ def render_governance(data: DemoData, target: float, scenario: str) -> None:
         unsafe_allow_html=True,
     )
 
+    with st.expander("Glossary - synthetic planning terms"):
+        st.markdown(
+            "- **DLH** - Direct Labor Hours: hours worked on the contract's direct labor.\n"
+            "- **QDLH** - Qualifying Direct Labor Hours: the subset of DLH performed by qualifying employees.\n"
+            "- **QDL** - Qualifying Direct Labor (the qualifying-employee labor category).\n"
+            "- **Ratio / planning indicator** - QDLH / DLH, rolled up org-wide by summing hours (never by averaging site percentages). The AbilityOne requirement is 75%.\n"
+            "- **FTE** - Full-Time Equivalent, used here only for synthetic attrition assumptions.\n"
+            "- **ODLH / DLR** - internal shorthand in this demo for the AbilityOne direct-labor-hours ratio (the 75% requirement). These are not standard statutory acronyms; the standard phrasing is 'direct labor hours ratio.'"
+        )
+
     with st.expander("Current primary-source framing used by this concept"):
         st.markdown(
             "- [41 U.S.C. § 8501](https://uscode.house.gov/view.xhtml?edition=prelim&num=0&req=granuleid%3AUSC-prelim-title41-section8501)\n"

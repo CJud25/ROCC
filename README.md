@@ -35,7 +35,11 @@ planning simulation, reports, and the privacy & governance statement.
 - Referral-source quality and cold-source tracking against real cadences.
 - Mass-push planning when new contracts approach (via a future GovCon Recompete
   Radar handoff).
-- Contract DLR trends and ODLH 75%-floor monitoring.
+- Contract direct-labor-ratio (DLR) trends and direct-labor-hours (ODLH) 75%-floor monitoring.
+
+> Acronyms: QDLH = Qualifying Direct Labor Hours, DLH = Direct Labor Hours,
+ratio = QDLH / DLH (the AbilityOne 75% requirement). A full glossary is on the
+Privacy & Governance page.
 
 ## Quickstart
 
