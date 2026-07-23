@@ -341,7 +341,7 @@ def render_site_readiness(data: DemoData, target: float, scenario: str) -> None:
     row180 = forecasts180.loc[forecasts180["site_name"] == selected_name].iloc[0]
     site_id = row90["site_id"]
 
-    st.markdown(f"### {selected_name} &nbsp; {_risk_badge(row90['risk_status'])}", unsafe_allow_html=True)
+    st.markdown(f"### {html.escape(selected_name)} &nbsp; {_risk_badge(row90['risk_status'])}", unsafe_allow_html=True)
     cols = st.columns(6)
     cols[0].metric("Current indicator", f"{row90['current_ratio']:.1%}")
     cols[1].metric("90-day", f"{row90['projected_ratio']:.1%}", f"{row90['direction']:+.1%}")
