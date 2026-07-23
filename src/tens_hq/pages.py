@@ -425,12 +425,21 @@ def render_site_readiness(data: DemoData, target: float, scenario: str) -> None:
                 use_container_width=True,
             )
         st.markdown("#### Manager action plan")
-        st.markdown(
-            "1. Confirm the assumption set and latest labor close.\n"
-            "2. Assign the top three partner contacts to an owner.\n"
-            "3. Complete a 14-day outreach sprint for At Risk/Critical sites.\n"
-            "4. Re-run the forecast after the next pipeline review."
+        top_partners = (
+            recommended["organization_name"].head(3).tolist() if not recommended.empty else []
         )
+        partners_txt = ", ".join(top_partners) if top_partners else "the highest-priority covered partners"
+        steps = [
+            f"1. Confirm **{selected_name}**'s latest labor close and the {row90['risk_status']} assumption set.",
+            f"2. Assign an owner to contact {partners_txt}.",
+        ]
+        if row90["risk_status"] in {"At Risk", "Critical"}:
+            steps.append("3. Run a 14-day outreach sprint (this site is At Risk/Critical).")
+            steps.append("4. Re-run the forecast after the next pipeline review.")
+        else:
+            steps.append("3. Maintain the standard partner cadence; no sprint required at current risk.")
+            steps.append("4. Re-run the forecast after the next pipeline review.")
+        st.markdown("\n".join(steps))
 
 
 def render_resource_network(data: DemoData, target: float, scenario: str) -> None:
