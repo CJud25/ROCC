@@ -3,9 +3,8 @@
 **Every record in this repository is synthetic by design — that is the
 governance point, not a limitation.** ROCC is a workforce and outreach control
 center for an AbilityOne nonprofit operating context: referral sources, sites,
-and aggregate pipeline stages get measured, and applicants never do. There is
-no hosted deployment — `.\run_demo.ps1` provisions a virtualenv and boots it
-locally.
+and contracts may be measured, and applicants never are. There is no hosted
+deployment — `.\run_demo.ps1` provisions a virtualenv and boots it locally.
 
 ![ROCC Executive Command Brief: a 90-day planning indicator, gap to target,
 ready hires needed and at-risk site count as four KPI cards, a live "ready hires
@@ -15,8 +14,10 @@ chart](docs/assets/rocc-home.png)
 *The default page, screenshotted from a local run of this repository. Every
 figure on it is computed at run time by the deterministic synthetic generator;
 none of it is hand-entered. The synthetic-data banner sits in the sidebar on
-every page, and the planning-indicator banner shown here also appears on Site
-Readiness and Ratio Forecast — the other two surfaces that project a ratio.*
+every page. The planning-indicator banner shown here also appears on Site
+Readiness and Ratio Forecast; Reports projects ratios too, but carries the
+human-review draft banner instead — the site readiness report it generates
+repeats the planning-indicator line inside the report body.*
 
 > **SYNTHETIC DEMO DATA — NOT FOR EMPLOYMENT OR COMPLIANCE DECISIONS.**
 > Every record is generated and fictional. No real applicant, employee, partner,
@@ -30,9 +31,9 @@ Part of the TENS HQ product family, alongside
 
 1. **Synthetic only, until sponsorship.** No real-data pathway ships. A real-data
    version happens only under employer sponsorship, in a separate trust boundary.
-2. **Aggregates by design.** Referral sources, sites, and contracts get measured —
-   **applicants never do.** No applicant-level rows, identifiers, or statuses
-   render anywhere (test-enforced). One documented exception: synthetic
+2. **Aggregates by design.** Referral sources, sites, and contracts may be
+   measured — **applicants never are.** No applicant-level rows, identifiers, or
+   statuses render anywhere (test-enforced). One documented exception: synthetic
    partner-organization **business contacts** may appear by name in three synthetic
    surfaces — the Resource Network contact table, the Outreach contact picker,
    and human-reviewed draft messages — they are B2B contacts, never applicants,
@@ -81,10 +82,11 @@ memory, deterministically seeded. To materialize it as files for inspection:
 is gitignored on purpose — a repo whose UI refuses per-person display does not
 ship browsable person-level files, even synthetic ones).
 
-The gate, and what CI runs on every push:
+The gate — the three commands CI runs on every push, ahead of an advisory
+dependency scan, a container build, and a health probe against the booted app:
 
 ```powershell
-python -m pytest
+python -m pytest -q
 python -m ruff check .
 python scripts/validate_demo_data.py
 ```
@@ -96,27 +98,24 @@ python scripts/validate_demo_data.py
 ## How this was built
 
 I specified this product, cut it into gated slices, and verified each one; AI
-agents wrote most of the line-level code. The co-author trailers in the commit
-history make that split checkable, not asserted.
+agents wrote most of the line-level code. The co-author trailers make the AI
+half of that split checkable — every non-merge commit in this history names an
+AI co-author. The other half is my account of the work, not a trailer.
 
-No slice landed until it came back green on the repo's own gate — today
-`python -m pytest`, `python -m ruff check .`, and
-`python scripts/validate_demo_data.py`, all of which CI runs — and an
-independent adversarial review pass went at it first, looking for what I would
-want to believe. Commit `1b7b24c` ("writer-review fix") is what that pass leaves
-behind.
+The gate each slice had to come back green on is the one CI still runs on every
+push: `python -m pytest -q`, `python -m ruff check .`, and
+`python scripts/validate_demo_data.py`, followed by an advisory dependency scan,
+a container build, and a health probe against the booted app.
 
-The catch I am proudest of is in ADR-024. An earlier design let a role selector
-decide which viewers saw synthetic applicant-level rows, and it read like a
-privacy control. It is not one. A dropdown in a demo UI is a display preference,
-not an authorization boundary — the rows are in the process either way, so
-"recruiters see people, executives do not" protects nobody. I deleted the role
-gate instead of tuning it, and applicant output became aggregate-only for every
-viewer.
+An adversarial review pass then read what had landed and left its correction in
+the history as a commit of its own: `1b7b24c` ("writer-review fix"), a direct
+child of the initial release commit — that pass ran after the release, not
+before it.
 
-The commit history shows AI co-authorship. The judgment calls — what to refuse
-to compute, what to delete, which wording was overstated — are the part worth
-evaluating.
+The history shows the AI co-authorship directly. The judgment calls are the part
+worth evaluating: where the slice boundaries fell, what this product refuses to
+compute, deleting the ADR-024 role gate rather than tuning it, and choosing to
+run an adversarial pass at all.
 
 ## License
 
