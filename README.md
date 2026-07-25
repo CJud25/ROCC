@@ -74,12 +74,20 @@ Privacy & Governance page.
 .\run_demo.ps1          # provisions a venv and launches the app
 ```
 
-or `pip install -r requirements.txt` then `streamlit run app.py` (Python 3.11+).
-Everything runs offline — the dataset is generated in memory, deterministically
-seeded. To materialize it as files for inspection:
+or `pip install -r requirements.txt` then `streamlit run app.py` (Python 3.11+;
+CI provisions 3.11). Everything runs offline — the dataset is generated in
+memory, deterministically seeded. To materialize it as files for inspection:
 `py scripts/generate_demo_data.py` (byte-stable across runs; the output directory
 is gitignored on purpose — a repo whose UI refuses per-person display does not
 ship browsable person-level files, even synthetic ones).
+
+The gate, and what CI runs on every push:
+
+```powershell
+python -m pytest
+python -m ruff check .
+python scripts/validate_demo_data.py
+```
 
 - `docs/PRODUCT_BLUEPRINT.md` — the concept and its governance model.
 - `docs/PRIVACY_AND_GOVERNANCE.md` — the boundaries, in full.
