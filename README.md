@@ -93,6 +93,31 @@ python scripts/validate_demo_data.py
 - `docs/PRIVACY_AND_GOVERNANCE.md` — the boundaries, in full.
 - `docs/decisions/` — the ADR lineage, including ADR-024.
 
+## How this was built
+
+I specified this product, cut it into gated slices, and verified each one; AI
+agents wrote most of the line-level code. The co-author trailers in the commit
+history make that split checkable, not asserted.
+
+No slice landed until it came back green on the repo's own gate — today
+`python -m pytest`, `python -m ruff check .`, and
+`python scripts/validate_demo_data.py`, all of which CI runs — and an
+independent adversarial review pass went at it first, looking for what I would
+want to believe. Commit `1b7b24c` ("writer-review fix") is what that pass leaves
+behind.
+
+The catch I am proudest of is in ADR-024. An earlier design let a role selector
+decide which viewers saw synthetic applicant-level rows, and it read like a
+privacy control. It is not one. A dropdown in a demo UI is a display preference,
+not an authorization boundary — the rows are in the process either way, so
+"recruiters see people, executives do not" protects nobody. I deleted the role
+gate instead of tuning it, and applicant output became aggregate-only for every
+viewer.
+
+The commit history shows AI co-authorship. The judgment calls — what to refuse
+to compute, what to delete, which wording was overstated — are the part worth
+evaluating.
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
