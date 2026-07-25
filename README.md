@@ -102,10 +102,12 @@ agents wrote most of the line-level code. The co-author trailers make the AI
 half of that split checkable — every non-merge commit in this history names an
 AI co-author. The other half is my account of the work, not a trailer.
 
-The gate each slice had to come back green on is the one CI still runs on every
-push: `python -m pytest -q`, `python -m ruff check .`, and
-`python scripts/validate_demo_data.py`, followed by an advisory dependency scan,
-a container build, and a health probe against the booted app.
+Every slice had to come back green on the repo's gate, and CI runs that gate on
+every push: `python -m pytest -q`, `python -m ruff check .`, and
+`python scripts/validate_demo_data.py`. CI has since grown around it — an
+advisory dependency scan, a container build, and a health probe against the
+booted app — so the pipeline a reader sees today is wider than the one the early
+slices cleared.
 
 An adversarial review pass then read what had landed and left its correction in
 the history as a commit of its own: `1b7b24c` ("writer-review fix"), a direct
