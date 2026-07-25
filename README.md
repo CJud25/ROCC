@@ -1,13 +1,30 @@
 # ROCC — Recruiting & Outreach Control Center
 
-**A synthetic, aggregates-by-design workforce and outreach demonstration for an
-AbilityOne nonprofit operating context.** Part of the TENS HQ product family,
-alongside [GovCon Recompete Radar](https://github.com/CJud25/GovConRadar) and
-[ReconRadar](https://github.com/CJud25/ReconRadar).
+**Every record in this repository is synthetic by design — that is the
+governance point, not a limitation.** ROCC is a workforce and outreach control
+center for an AbilityOne nonprofit operating context: referral sources, sites,
+and aggregate pipeline stages get measured, and applicants never do. There is
+no hosted deployment — `.\run_demo.ps1` provisions a virtualenv and boots it
+locally.
+
+![ROCC Executive Command Brief: a 90-day planning indicator, gap to target,
+ready hires needed and at-risk site count as four KPI cards, a live "ready hires
+we can commit" slider with three simulated KPIs, and a portfolio trajectory
+chart](docs/assets/rocc-home.png)
+
+*The default page, screenshotted from a local run of this repository. Every
+figure on it is computed at run time by the deterministic synthetic generator;
+none of it is hand-entered. The synthetic-data banner sits in the sidebar on
+every page, and the planning-indicator banner shown here also appears on Site
+Readiness and Ratio Forecast — the other two surfaces that project a ratio.*
 
 > **SYNTHETIC DEMO DATA — NOT FOR EMPLOYMENT OR COMPLIANCE DECISIONS.**
 > Every record is generated and fictional. No real applicant, employee, partner,
 > medical, disability, or eligibility data exists anywhere in this repository.
+
+Part of the TENS HQ product family, alongside
+[GovCon Recompete Radar](https://github.com/CJud25/GovConRadar) and
+[ReconRadar](https://github.com/CJud25/ReconRadar).
 
 ## The two rules (ADR-024)
 
@@ -28,6 +45,16 @@ an outreach command center (contact recency, neglected sources, human-reviewed
 drafts), **Pipeline Health** (aggregate funnel counts, stage conversion, and
 time-in-stage — no people listed), source performance, a labeled ratio-forecast
 planning simulation, reports, and the privacy & governance statement.
+
+![ROCC Pipeline Health: synthetic referral, application, hire and referral-source
+totals, a stage funnel bar chart from Referred down to Eligibility Cleared, and a
+stage conversion table](docs/assets/rocc-pipeline-health.png)
+
+*Pipeline Health is where the second rule is easiest to check. The funnel is
+built from person-like synthetic records that never leave the data engine: the
+page renders counts, conversion rates, medians and shares, and
+`tests/test_ui_contract.py` fails the build if an applicant identifier or
+display label reaches a rendered frame.*
 
 ## Roadmap (future — none of this is built)
 
