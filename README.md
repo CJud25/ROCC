@@ -3,8 +3,10 @@
 **Every record in this repository is synthetic by design — that is the
 governance point, not a limitation.** ROCC is a workforce and outreach control
 center for an AbilityOne nonprofit operating context: referral sources, sites,
-and contracts may be measured, and applicants never are. There is no hosted
-deployment — `.\run_demo.ps1` provisions a virtualenv and boots it locally.
+and contracts may be measured, and applicants never are. A hosted demo runs at
+<https://controlcenter.streamlit.app> — safe to host precisely because there is
+no real applicant data in it. `.\run_demo.ps1` provisions a virtualenv and boots
+the same app locally.
 
 ![ROCC Executive Command Brief: a 90-day planning indicator, gap to target,
 ready hires needed and at-risk site count as four KPI cards, a live "ready hires
