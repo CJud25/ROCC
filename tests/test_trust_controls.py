@@ -34,18 +34,34 @@ CONTROL_TEST_MAP: dict[str, tuple[str, str]] = {
 }
 
 
-def _extract_control_ids() -> tuple[bool, set[str]]:
+def _extract_trust_controls() -> tuple[bool, set[str], list[str], list[str]]:
     text = ARCHITECTURE.read_text(encoding="utf-8")
     match = re.search(r"^## Trust controls\s*$([\s\S]*?)(?=^##\s|\Z)", text, re.MULTILINE)
     if match is None:
-        return False, set()
-    return True, set(re.findall(r"<!-- control: ([a-z0-9-]+) -->", match.group(1)))
+        return False, set(), [], []
+
+    section = match.group(1)
+    bullet_lines = [line for line in section.splitlines() if line.startswith("- ")]
+    annotated_bullets = [
+        line
+        for line in bullet_lines
+        if re.search(r"<!-- control: ([a-z0-9-]+) -->", line)
+    ]
+    control_ids = set(re.findall(r"<!-- control: ([a-z0-9-]+) -->", section))
+    return True, control_ids, bullet_lines, annotated_bullets
 
 
 def test_trust_controls_sweep_covers_every_documented_control():
-    heading_found, control_ids = _extract_control_ids()
+    heading_found, control_ids, bullet_lines, annotated_bullets = _extract_trust_controls()
+    unannotated_bullets = [
+        line for line in bullet_lines if line not in annotated_bullets
+    ]
 
     assert heading_found
+    assert len(bullet_lines) == len(annotated_bullets), (
+        "Every bullet in the Trust controls section must carry a control annotation; "
+        f"unannotated bullets: {unannotated_bullets}"
+    )
     assert control_ids == set(CONTROL_TEST_MAP)
     assert len(control_ids) >= 6
     assert {"do-not-contact-override", "socket-guard"} <= control_ids

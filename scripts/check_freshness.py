@@ -63,9 +63,10 @@ def main() -> int:
     facts = fact_registry()
     findings = stale_facts(today)
     if not facts:
-        for finding in findings:
-            print(f"STALE: {finding}")
         return 1
+
+    for finding in findings:
+        print(f"STALE: {finding}")
 
     for fact in facts:
         status = "STALE" if today > fact.deadline else "FRESH"

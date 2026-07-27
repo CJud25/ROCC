@@ -27,6 +27,8 @@ def test_do_not_contact_orgs_are_excluded_from_outreach_queue(demo_data):
 def test_do_not_contact_partner_priority_score_is_zero(demo_data):
     scored = source_performance(demo_data)
     organization_id = scored.iloc[0]["organization_id"]
+    assert scored.iloc[0]["partner_priority_score"] != 0
+
     organizations = demo_data.organizations.copy()
     organizations.loc[
         organizations["organization_id"].eq(organization_id), "relationship_status"

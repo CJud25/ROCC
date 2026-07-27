@@ -25,5 +25,17 @@ def test_deadline_day_is_fresh():
     assert check_freshness.stale_facts(date(2027, 6, 30)) == []
 
 
+def test_stale_main_prints_remediation(monkeypatch, capsys):
+    monkeypatch.setattr(
+        sys, "argv", ["check_freshness.py", "--today", "2027-07-01"]
+    )
+
+    assert check_freshness.main() == 1
+    assert (
+        "review the demo facts, regenerate them, and advance DATA_AS_OF_DATE"
+        in capsys.readouterr().out
+    )
+
+
 def test_registry_is_not_empty():
     assert check_freshness.fact_registry()
