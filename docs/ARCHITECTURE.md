@@ -108,12 +108,12 @@ their output contract contains aggregate dimensions and measures only.
 
 ## Trust controls
 
-- Synthetic markers and reserved identifiers/domains are validated.
-- The test harness blocks socket access.
-- Do Not Contact removes an organization from outreach priority.
-- Drafts and reports are local, synthetic, and human-reviewed.
-- No page can obtain applicant-level output through a role or navigation path.
-- Generated artifacts are reproducible but excluded from version control.
+- Synthetic markers and reserved identifiers/domains are validated. <!-- control: synthetic-markers-validated -->
+- The test harness blocks socket access. <!-- control: socket-guard -->
+- Do Not Contact removes an organization from outreach priority. <!-- control: do-not-contact-override -->
+- Drafts and reports are local, synthetic, and human-reviewed. <!-- control: drafts-human-reviewed -->
+- No page can obtain applicant-level output through a role or navigation path. <!-- control: no-applicant-level-output -->
+- Generated artifacts are reproducible but excluded from version control. <!-- control: generated-artifacts-untracked -->
 
 ## Production transition
 
