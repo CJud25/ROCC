@@ -123,7 +123,7 @@ def leadership_summary_markdown(forecasts: pd.DataFrame, queue: pd.DataFrame) ->
         3, "qualified_hiring_need"
     )
     risks = "\n".join(
-        f"- {row.site_name}: {row.risk_status}, projected {row.projected_ratio:.1%}, need {int(row.qualified_hiring_need or 0)}"
+        f"- {row.site_name}: {row.risk_status}, projected {row.projected_ratio:.1%}, need {int(0 if pd.isna(row.qualified_hiring_need) else row.qualified_hiring_need)}"
         for row in risk_sites.itertuples(index=False)
     ) or "- No At Risk or Critical sites in the selected scenario."
     actions = "\n".join(

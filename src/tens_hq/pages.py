@@ -344,7 +344,10 @@ def render_site_readiness(data: DemoData, target: float, scenario: str) -> None:
     cols[1].metric("90-day", f"{row90['projected_ratio']:.1%}", f"{row90['direction']:+.1%}")
     cols[2].metric("180-day", f"{row180['projected_ratio']:.1%}")
     cols[3].metric("Open roles", int(row90["open_roles_count"]))
-    cols[4].metric("Ready hires still needed", int(row90["qualified_hiring_need"] or 0))
+    cols[4].metric(
+        "Ready hires still needed",
+        int(0 if pd.isna(row90["qualified_hiring_need"]) else row90["qualified_hiring_need"]),
+    )
     cols[5].metric("Projected pipeline arrivals", f"{row90['expected_ready_hires']:.1f}")
     st.markdown(f'<div class="insight-box">{html.escape(row90["explanation"])}</div>', unsafe_allow_html=True)
     _cov = row90["pipeline_coverage"]
